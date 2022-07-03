@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using CronusScript.Core;
 
 namespace CronusScript.Parser
@@ -21,10 +22,13 @@ namespace CronusScript.Parser
         public int StartingLineNo;
         public int StartingColOffset;
 
+        public int Level;
         public int Fill;
         public int Mark;
 
         /// Important for the actual parsing
+
+        public const int MAXSTACK = 6000;
 
         public struct KeywordToken
         {
@@ -81,14 +85,66 @@ namespace CronusScript.Parser
             StartingLineNo = 0;
             StartingColOffset = 0;
 
+            Level = 0;
             Fill = 0;
             Mark = 0;
         }
 
-        public void Parse()
+        public static void Parse(ref Parser p)
         {
             /* !!! TEMPORARY CODE !!! */
-            Generator.FillToken(this);
+            RuleFile(ref p);
+        }
+
+        /*
+         * Debug print functions
+         */
+
+        [Conditional("DEBUG")]
+        private static void PrintTest(ref Parser p, string func, string check, int mark)
+        {
+            string msg = new string(' ', p.Level);
+            msg += $"> {func} [{mark}-{p.Mark}]: {check}";
+            Console.WriteLine(msg);
+        }
+
+        [Conditional("DEBUG")]
+        private static void PrintSuccess(ref Parser p, string func, string check, int mark)
+        {
+            string msg = $"+ {func} [{mark}-{p.Mark}]: {check} succeeded!".PadRight(p.Level);
+            Console.WriteLine(msg);
+        }
+
+        [Conditional("DEBUG")]
+        private static void PrintFail(ref Parser p, string func, string check, int mark)
+        {
+            string msg = $"- {func} [{mark}-{p.Mark}]: {check} failed!".PadRight(p.Level);
+            Console.WriteLine(msg);
+        }
+
+        /*
+         * 
+         *  All of the code to build an AST
+         *
+         */
+
+
+        // file: statements? $
+        private static void RuleFile(ref Parser p)
+        {
+            if (p.Level++ == MAXSTACK)
+            {
+                p.ErrorIndicator = true;
+                /// TODO: ERROR HANDLING
+                Console.WriteLine("No memory");
+            }
+            if (p.ErrorIndicator)
+            {
+                p.Level--;
+                return;
+            }
+
+            PrintTest(ref p, "file", "statements?", 0);
         }
     }
 }

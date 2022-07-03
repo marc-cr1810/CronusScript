@@ -2,6 +2,15 @@ namespace RuleGenerator
 {
     internal static class Program
     {
+        public static Dictionary<string, Rule> Rules = new Dictionary<string, Rule>();
+
+        public static void AddRule(Rule rule)
+        {
+            if (Rules.ContainsKey(rule.Name))
+                return;
+            Rules.Add(rule.Name, rule);
+        }
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>

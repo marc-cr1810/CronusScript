@@ -140,7 +140,7 @@ namespace CronusScript.Parser
 
             Parser p = new Parser(tok);
 
-            p.Parse();
+            Parser.Parse(ref p);
         }
     }
 }
