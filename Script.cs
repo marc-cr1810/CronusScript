@@ -6,31 +6,39 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using CronusScript.Parser;
 
 namespace CronusScript
 {
     public class Script
     {
-        private string Filepath = "";
+        private StringObject Filepath;
         private ScriptError Error = new ScriptError() { Level = ScriptError.ErrorLevel.OK };
 
         private Dictionary<string, CObject> Global = new Dictionary<string, CObject>();
 
-        public Script()
+        public Script(string filepath)
         {
-            Global.Add("__CRONUS_SCRIPT_VERSION__", new StringObject(FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion));
+            if (!File.Exists(filepath))
+            {
+                SetError(ScriptError.ErrorLevel.FATAL, $"Invalid filepath \"{filepath}\"");
+            }
+            Filepath = new StringObject(filepath);
+
+            Global.Add("__CRONUS_SCRIPT_VERSION__", 
+                new StringObject(FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion));
+            Global.Add("__FILEPATH__", Filepath);
         }
 
         public static ScriptError LoadScript(out Script script, string filepath)
         {
-            script = new Script();
+            script = new Script(filepath);
+            if (script.HasError())
+                return script.Error;
 
-            if (!File.Exists(filepath))
-            {
-                script.SetError(ScriptError.ErrorLevel.FATAL, $"Invalid filepath \"{filepath}\"");
-                return script.GetError();
-            }
-            script.Filepath = filepath;
+            script.Global.Add("__MAIN__", new NullObject());
+
+            Generator.RunParser(script.Filepath);
 
             return new ScriptError() { Level = ScriptError.ErrorLevel.OK };
         }
