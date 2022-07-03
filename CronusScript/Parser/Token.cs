@@ -85,8 +85,8 @@ namespace CronusScript.Parser
 
     internal struct Token
     {
-		TokenType type;		// What token is it
-		Object value;       // StringObject value of the token
-		int LineNo, ColOffset, EndLineNo, EndColOffset; // Line and column position of the token
+		public TokenType Type;		// What token is it
+		public Object Value;       // StringObject value of the token
+		public int LineNo, ColOffset, EndLineNo, EndColOffset; // Line and column position of the token
     }
 }

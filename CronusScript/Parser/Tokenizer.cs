@@ -27,6 +27,9 @@ namespace CronusScript.Parser
 
         public int TabSize;             // Tab Spacing
         public int LineNo;              // Current line number
+        public int FirstLineNo;         // First line of a single line or multi line string
+        public long LineStart;           // Start of current line
+        public long MultiLineStart;      // Start of first line of a single line or multi line string expression
 
         public int Indent;              // Current indentation level
         public int[] IndStack;          // Stack of indents
@@ -53,6 +56,9 @@ namespace CronusScript.Parser
             AtBOL = true;
             TabSize = Tokenizer.TabSize;
             LineNo = 0;
+            FirstLineNo = 0;
+            LineStart = 0;
+            MultiLineStart = 0;
 
             Indent = 0;
             IndStack = new int[Tokenizer.MAX_INDENT];
@@ -67,6 +73,14 @@ namespace CronusScript.Parser
             ContLine = false;
 
             TypeComments = false;
+        }
+
+        public string GetValue()
+        {
+            byte[] str = new byte[Cur - Start];
+            File.Position = Start;
+            File.Read(str, 0, (int)(Cur - Start));
+            return Encoding.ASCII.GetString(str);
         }
     }
 
@@ -361,7 +375,10 @@ namespace CronusScript.Parser
                     return EOF;
                 }
                 if (c == '\n')
+                {
+                    tok.LineStart = tok.Cur;
                     tok.LineNo++;
+                }
                 return c;
             }
             return EOF;
@@ -856,6 +873,12 @@ namespace CronusScript.Parser
                 int quote_size = 1; // 1 or 3
                 int end_quote_size = 0;
 
+                /* Nodes of type STRING, especially multi line strings
+                   must be handled differently in order to get both
+                   the starting line number and the column offset right. */
+                tok.FirstLineNo = tok.LineNo;
+                tok.MultiLineStart = tok.LineStart;
+
                 // Find the quote size and start of the string
                 c = Next(ref tok);
                 if (c == quote)
@@ -1014,23 +1037,7 @@ namespace CronusScript.Parser
                 result = TokenType.ERRORTOKEN;
                 tok.Done = ErrorCode.DECODE;
             }
-
             return result;
-        }
-
-        public static TokenType FillToken(Parser p)
-        {
-            long start = 0;
-            long end = 0;
-            TokenType type = GetToken(ref p.Tok, ref start, ref end);
-
-            // Skip '# type: ignore' comments
-            while (type == TokenType.TYPE_IGNORE)
-                type = GetToken(ref p.Tok, ref start, ref end);
-
-
-
-            return TokenType.ENDMARKER;
         }
     }
 }

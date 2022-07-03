@@ -18,12 +18,15 @@ namespace CronusScript.Parser
         public TokState Tok;
         public List<Token> Tokens;
 
-        public int fill;
-        public int mark;
+        public int StartingLineNo;
+        public int StartingColOffset;
+
+        public int Fill;
+        public int Mark;
 
         /// Important for the actual parsing
 
-        private struct KeywordToken
+        public struct KeywordToken
         {
             public string? Name;
             public TokenType Type;
@@ -32,7 +35,7 @@ namespace CronusScript.Parser
         // Has to be done because C# requires all array elements to be filled
         // Looks stupid but I can't figure out another method, waste of memory
         private static readonly KeywordToken NullKeyword = new KeywordToken() { Name = null, Type = TokenType.UNKNOWN };
-        private static readonly KeywordToken[,] Keywords = new KeywordToken[6, 10]
+        public static readonly KeywordToken[,] Keywords = new KeywordToken[6, 10]
         {
             { // 0
                 NullKeyword,NullKeyword,NullKeyword,NullKeyword,NullKeyword,NullKeyword,NullKeyword,NullKeyword,NullKeyword,NullKeyword
@@ -75,14 +78,17 @@ namespace CronusScript.Parser
             Tok = tok;
             Tokens = new List<Token>();
 
-            fill = 0;
-            mark = 0;
+            StartingLineNo = 0;
+            StartingColOffset = 0;
+
+            Fill = 0;
+            Mark = 0;
         }
 
         public void Parse()
         {
             /* !!! TEMPORARY CODE !!! */
-            Tokenizer.FillToken(this);
+            Generator.FillToken(this);
         }
     }
 }
