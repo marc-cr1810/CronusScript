@@ -42,10 +42,10 @@ namespace RuleGenerator
 
             Rule = new Rule(name, format, resultType);
 
-            string rules = GenerateRules(format);
+            string rules = GenerateSubRules(format);
         }
 
-        private string GenerateRules(string format)
+        private string GenerateSubRules(string format)
         {
             string result = "";
 
@@ -53,6 +53,7 @@ namespace RuleGenerator
 
             foreach (string ruleFormat in ruleFormats)
             {
+                SubRule subRule = new SubRule(ruleFormat);
 
             }
 

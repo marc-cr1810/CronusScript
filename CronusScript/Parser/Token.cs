@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CronusScript.Parser
 {
-    internal enum TokenType
+    public enum TokenType
     {
         UNKNOWN = -1,   // Unknown token type; for errors
         ENDMARKER,      // Endmarker token
