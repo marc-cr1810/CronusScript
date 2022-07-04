@@ -10,6 +10,10 @@ namespace CronusScript.Parser
 {
     internal class Generator
     {
+        /*
+         *      Tokenizer
+         */
+
         private static TokenType TokenizerError(ref Parser p)
         {
             /// TODO: ERROR HANDLING 
@@ -79,8 +83,26 @@ namespace CronusScript.Parser
             return TokenType.NAME;
         }
 
+        internal static Token? ExpectToken(ref Parser p, TokenType type)
+        {
+            if (p.Mark == p.Fill)
+            {
+                if (FillToken(ref p) < 0)
+                {
+                    p.ErrorIndicator = true;
+                    return null;
+                }
+            }
+            Token t = p.Tokens[p.Mark];
+            if (t.Type != type)
+            {
+                return null;
+            }
+            p.Mark += 1;
+            return t;
+        }
 
-        public static TokenType FillToken(Parser p)
+        internal static TokenType FillToken(ref Parser p)
         {
             long start = 0;
             long end = 0;
@@ -134,6 +156,10 @@ namespace CronusScript.Parser
             return TokenType.ENDMARKER;
         }
 
+        /*
+         *      Parser
+         */
+
         public static void RunParser(StringObject filepath)
         {
             TokState tok = new TokState(filepath);
@@ -141,6 +167,23 @@ namespace CronusScript.Parser
             Parser p = new Parser(tok);
 
             Parser.Parse(ref p);
+        }
+
+        /*
+         *      Generator
+         */
+
+        internal static ModType? MakeModule(ref Parser p, StmtSeq? a)
+        {
+            TypeIgnoreSeq? typeIgnores = null;
+            long num = p.TypeIgnoreComments.Count();
+            
+            if (num > 0)
+            {
+                /// TODO: Turn the raw (comment, lineno) pairs into TypeIgnore objects
+            }
+
+            return AST.Module(a, typeIgnores);
         }
     }
 }

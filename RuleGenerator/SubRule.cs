@@ -22,7 +22,10 @@ namespace RuleGenerator
 
         private void Generate()
         {
-            string[] f = Format.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (char c in Format)
+            {
+
+            }
         }
 
         private void AddObject(RuleObject rule)

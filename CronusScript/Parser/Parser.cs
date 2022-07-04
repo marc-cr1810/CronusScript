@@ -8,6 +8,21 @@ using CronusScript.Core;
 
 namespace CronusScript.Parser
 {
+    internal struct GrowableCommentList
+    {
+        public struct Item
+        {
+            public int LineNo;
+            public string Comment; // The " <tag>" in "# type: ignore <tag>"
+        }
+        public List<Item> Items;
+
+        public int Count()
+        {
+            return Items.Count;
+        }
+    }
+
     internal class Parser
     {
         /// Parser data
@@ -21,6 +36,8 @@ namespace CronusScript.Parser
 
         public int StartingLineNo;
         public int StartingColOffset;
+
+        public GrowableCommentList TypeIgnoreComments;
 
         public int Level;
         public int Fill;
@@ -85,6 +102,8 @@ namespace CronusScript.Parser
             StartingLineNo = 0;
             StartingColOffset = 0;
 
+            TypeIgnoreComments.Items = new List<GrowableCommentList.Item>();
+
             Level = 0;
             Fill = 0;
             Mark = 0;
@@ -111,14 +130,16 @@ namespace CronusScript.Parser
         [Conditional("DEBUG")]
         private static void PrintSuccess(ref Parser p, string func, string check, int mark)
         {
-            string msg = $"+ {func} [{mark}-{p.Mark}]: {check} succeeded!".PadRight(p.Level);
+            string msg = new string(' ', p.Level);
+            msg += $"+ {func} [{mark}-{p.Mark}]: {check} succeeded!";
             Console.WriteLine(msg);
         }
 
         [Conditional("DEBUG")]
         private static void PrintFail(ref Parser p, string func, string check, int mark)
         {
-            string msg = $"- {func} [{mark}-{p.Mark}]: {check} failed!".PadRight(p.Level);
+            string msg = new string(' ', p.Level);
+            msg += $"- {func} [{mark}-{p.Mark}]: {check} failed!";
             Console.WriteLine(msg);
         }
 
@@ -130,7 +151,7 @@ namespace CronusScript.Parser
 
 
         // file: statements? $
-        private static void RuleFile(ref Parser p)
+        private static ModType? RuleFile(ref Parser p)
         {
             if (p.Level++ == MAXSTACK)
             {
@@ -141,10 +162,274 @@ namespace CronusScript.Parser
             if (p.ErrorIndicator)
             {
                 p.Level--;
-                return;
+                return null;
+            }
+            ModType? result = null;
+            int mark = p.Mark;
+
+            { // statements? $
+                if (p.ErrorIndicator)
+                {
+                    p.Level--;
+                    return null;
+                }
+                PrintTest(ref p, "file", "statements? $", mark);
+                StmtSeq? a;
+                Token? endmarker_var;
+                if (
+                    ((a = RuleStatements(ref p)) != null && !p.ErrorIndicator) // statements?
+                    &&
+                    ((endmarker_var = Generator.ExpectToken(ref p, TokenType.ENDMARKER)) != null) // token='ENDMARKER'
+                )
+                {
+                    PrintSuccess(ref p, "file", "statements? $", mark);
+                    result = Generator.MakeModule(ref p, a);
+                    if (result == null) /// TODO: ERROR HANDLING Check for errors
+                    {
+                        p.ErrorIndicator = true;
+                        p.Level--;
+                        return null;
+                    }
+                    goto done;
+                }
+                p.Mark = mark;
+                PrintFail(ref p, "file", "statements? $", mark);
+            }
+            result = null;
+        done:
+            p.Level--;
+            return result;
+        }
+
+        // statements: statement+
+        private static StmtSeq? RuleStatements(ref Parser p)
+        {
+            if (p.Level++ == MAXSTACK)
+            {
+                p.ErrorIndicator = true;
+                /// TODO: ERROR HANDLING
+                Console.WriteLine("No memory");
+            }
+            if (p.ErrorIndicator)
+            {
+                p.Level--;
+                return null;
+            }
+            StmtSeq? result = null;
+            int mark = p.Mark;
+
+            { // statement+
+                if (p.ErrorIndicator)
+                {
+                    p.Level--;
+                    return null;
+                }
+                PrintTest(ref p, "statements", "statement+", mark);
+                StmtSeqSeq? a;
+                if (
+                    ((a = LoopRule3(ref p)) != null)
+                )
+                {
+                    PrintSuccess(ref p, "statements", "statement+", mark);
+                    result = a.Value.Flatten();
+                    if (result == null)  /// TODO: ERROR HANDLING Check for errors
+                    {
+                        p.ErrorIndicator = true;
+                        p.Level--;
+                        return null;
+                    }
+                    goto done;
+                }
+
+                p.Mark = mark;
+                PrintFail(ref p, "statements", "statement+", mark);
             }
 
-            PrintTest(ref p, "file", "statements?", 0);
+            result = null;
+        done:
+            p.Level--;
+            return result;
+        }
+
+        // looprule_3: statement
+        private static StmtSeqSeq? LoopRule3(ref Parser p)
+        {
+            if (p.Level++ == MAXSTACK)
+            {
+                p.ErrorIndicator = true;
+                /// TODO: ERROR HANDLING
+                Console.WriteLine("No memory");
+            }
+            if (p.ErrorIndicator)
+            {
+                p.Level--;
+                return null;
+            }
+
+            StmtSeq? result = null;
+            int mark = p.Mark;
+            List<StmtSeq?> children = new List<StmtSeq?>();
+            int n = 0;
+
+            { // statement
+                if (p.ErrorIndicator)
+                {
+                    p.Level--;
+                    return null;
+                }
+                PrintTest(ref p, "looprule_3", "statement", mark);
+                StmtSeq? statement_var;
+                while (
+                    ((statement_var = RuleStatement(ref p)) != null) // statement
+                )
+                {
+                    result = statement_var;
+                    children.Add(result);
+                    n++;
+                    mark = p.Mark;
+                }
+                p.Mark = mark;
+                PrintFail(ref p, "looprule_3", "statement", mark);
+            }
+            if (n == 0 || p.ErrorIndicator)
+            {
+                p.Level--;
+                return null;
+            }
+
+            StmtSeqSeq seq = new StmtSeqSeq();
+            seq.Elements = children.ToArray();
+            p.Level--;
+            return seq;
+        }
+
+        // statement: compound_stmt | simple_stmts
+        private static StmtSeq? RuleStatement(ref Parser p)
+        {
+            if (p.Level++ == MAXSTACK)
+            {
+                p.ErrorIndicator = true;
+                /// TODO: ERROR HANDLING
+                Console.WriteLine("No memory");
+            }
+            if (p.ErrorIndicator)
+            {
+                p.Level--;
+                return null;
+            }
+            StmtSeq? result = null;
+            int mark = p.Mark;
+
+            { // compound_stmt
+                if (p.ErrorIndicator)
+                {
+                    p.Level--;
+                    return null;
+                }
+                PrintTest(ref p, "statement", "compound_stmt", mark);
+                StmtType? a;
+                if (
+                    ((a = RuleCompoundStmt(ref p)) != null) // compound_stmt
+                )
+                {
+                    PrintSuccess(ref p, "statement", "compound_stmt", mark);
+                    result = a.Value.SingletonSeq();
+                    if (result == null)  /// TODO: ERROR HANDLING Check for errors
+                    {
+                        p.ErrorIndicator = true;
+                        p.Level--;
+                        return null;
+                    }
+                    goto done;
+                }
+                p.Mark = mark;
+                PrintFail(ref p, "statement", "compound_stmt", mark);
+            }
+            { // simple_stmts
+                if (p.ErrorIndicator)
+                {
+                    p.Level--;
+                    return null;
+                }
+                PrintTest(ref p, "statement", "simple_stmts", mark);
+                StmtSeq? a;
+                if (
+                    ((a = RuleSimpleStmts(ref p)) != null)
+                )
+                {
+                    PrintSuccess(ref p, "statement", "simple_stmts", mark);
+                    result = a;
+                    if (result == null)  /// TODO: ERROR HANDLING Check for errors
+                    {
+                        p.ErrorIndicator = true;
+                        p.Level--;
+                        return null;
+                    }
+                    goto done;
+                }
+                p.Mark = mark;
+                PrintFail(ref p, "statement", "simple_stmts", mark);
+            }
+
+            result = null;
+        done:
+            p.Level--;
+            return result;
+        }
+
+        // compound_stmt:
+        //     | &('def' | '@' | ASYNC) function_def
+        //     | &'if' if_stmt
+        //     | &('class' | '@') class_def
+        //     | &('with' | ASYNC) with_stmt
+        //     | &('for' | ASYNC) for_stmt
+        //     | &'try' try_stmt
+        //     | &'while' while_stmt
+        //     | match_stmt
+        private static StmtType? RuleCompoundStmt(ref Parser p)
+        {
+            if (p.Level++ == MAXSTACK)
+            {
+                p.ErrorIndicator = true;
+                /// TODO: ERROR HANDLING
+                Console.WriteLine("No memory");
+            }
+            if (p.ErrorIndicator)
+            {
+                p.Level--;
+                return null;
+            }
+            StmtType? result = null;
+
+
+
+            result = null;
+        done:
+            p.Level--;
+            return result;
+        }
+
+        // simple_stmts: simple_stmt !';' NEWLINE | ';'.simple_stmt+ ';'? NEWLINE
+        private static StmtSeq? RuleSimpleStmts(ref Parser p)
+        {
+            if (p.Level++ == MAXSTACK)
+            {
+                p.ErrorIndicator = true;
+                /// TODO: ERROR HANDLING
+                Console.WriteLine("No memory");
+            }
+            if (p.ErrorIndicator)
+            {
+                p.Level--;
+                return null;
+            }
+            StmtSeq? result = null;
+            int mark = p.Mark;
+
+            result = null;
+        done:
+            p.Level--;
+            return result;
         }
     }
 }

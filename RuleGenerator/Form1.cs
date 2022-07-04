@@ -9,13 +9,22 @@ namespace RuleGenerator
         public Form1()
         {
             InitializeComponent();
+
+            foreach (string nodeType in Enum.GetNames(typeof(NodeType)))
+            {
+                ComboBoxType.Items.Add(nodeType);
+            }
+            ComboBoxType.SelectedIndex = 0;
+
+            if (ComboBoxKind.Items.Count == 0)
+                ComboBoxKind.Items.Add("No kind");
+            ComboBoxKind.SelectedIndex = 0;
         }
 
         private void buttonGenerate_Click(object sender, EventArgs e)
         {
             string name = textRuleName.Text;
             string format = textRuleFormat.Text;
-            string resultType = ComboBoxResultType.Text;
 
             if (name == "")
             {
@@ -26,18 +35,22 @@ namespace RuleGenerator
                     format = format.Substring(i + 2);
                 }
             }
+
+            ResultType resultType = new ResultType();
+            resultType.Type = (NodeType)Enum.Parse(typeof(NodeType), ComboBoxType.Text);
+
             Generate(name, format, resultType);
 
             // Output the result
             OutputBox.Text = Rule.ToString();
         }
 
-        private void Generate(string name, string format, string resultType)
+        private void Generate(string name, string format, ResultType resultType)
         {
             string result = "";
 
-            if (name == null || format == null || resultType == null ||
-                name == "" || format == "" || resultType == "")
+            if (name == null || format == null ||
+                name == "" || format == "")
                 return;
 
             Rule = new Rule(name, format, resultType);
@@ -49,7 +62,33 @@ namespace RuleGenerator
         {
             string result = "";
 
-            string[] ruleFormats = format.Split(" | ");
+            List<string> ruleFormats = new List<string>();
+            int parenLevel = 0;
+            bool inQuote = false;
+
+            string f = "";
+            foreach (char c in format)
+            {
+                if (c == '"' || c == '\'')
+                    inQuote = !inQuote;
+
+                else if (c == '(' || c == '[')
+                    parenLevel++;
+                else if (c == ')' || c == ']')
+                    parenLevel--;
+
+                if (c == '|' && parenLevel == 0 && !inQuote)
+                {
+                    ruleFormats.Add(f.Trim());
+                    f = "";
+                    continue;
+                }
+
+                f += c;
+            }
+
+            if (f.Length > 0)
+                ruleFormats.Add(f);
 
             foreach (string ruleFormat in ruleFormats)
             {
@@ -58,6 +97,42 @@ namespace RuleGenerator
             }
 
             return result;
+        }
+
+        private void ComboBoxType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Type? enm = null;
+            NodeType type = (NodeType)ComboBoxType.SelectedIndex + 1;
+
+            switch (type)
+            {
+                case NodeType.Mod:
+                    enm = typeof(CronusScript.Parser.ModKind);
+                    break;
+                case NodeType.Stmt:
+                    enm = typeof(CronusScript.Parser.StmtKind);
+                    break;
+                case NodeType.Expr:
+                    enm = typeof(CronusScript.Parser.ExprKind);
+                    break;
+                case NodeType.ExceptHandler:
+                    enm = typeof(CronusScript.Parser.ExceptHandlerKind);
+                    break;
+                case NodeType.TypeIgnore:
+                    enm = typeof(CronusScript.Parser.TypeIgnoreKind);
+                    break;
+            }
+
+            if (enm == null)
+                return;
+
+            ComboBoxKind.Items.Clear();
+            ComboBoxKind.Items.Add("No kind");
+            foreach (string nodeTypeKind in Enum.GetNames(enm))
+            {
+                ComboBoxKind.Items.Add(nodeTypeKind);
+            }
+            ComboBoxKind.SelectedIndex = 0;
         }
     }
 }

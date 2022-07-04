@@ -35,7 +35,9 @@
             this.OutputBox = new System.Windows.Forms.RichTextBox();
             this.buttonGenerate = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
-            this.ComboBoxResultType = new System.Windows.Forms.ComboBox();
+            this.ComboBoxType = new System.Windows.Forms.ComboBox();
+            this.ComboBoxKind = new System.Windows.Forms.ComboBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -60,7 +62,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.ForeColor = System.Drawing.SystemColors.ControlLight;
-            this.label2.Location = new System.Drawing.Point(12, 41);
+            this.label2.Location = new System.Drawing.Point(12, 38);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(71, 15);
             this.label2.TabIndex = 2;
@@ -70,7 +72,7 @@
             // 
             this.textRuleFormat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textRuleFormat.Location = new System.Drawing.Point(89, 38);
+            this.textRuleFormat.Location = new System.Drawing.Point(89, 35);
             this.textRuleFormat.Name = "textRuleFormat";
             this.textRuleFormat.Size = new System.Drawing.Size(735, 23);
             this.textRuleFormat.TabIndex = 3;
@@ -105,26 +107,40 @@
             // 
             this.label3.AutoSize = true;
             this.label3.ForeColor = System.Drawing.SystemColors.ControlLight;
-            this.label3.Location = new System.Drawing.Point(14, 75);
+            this.label3.Location = new System.Drawing.Point(14, 67);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(69, 15);
             this.label3.TabIndex = 6;
             this.label3.Text = "Result Type:";
             // 
-            // ComboBoxResultType
+            // ComboBoxType
             // 
-            this.ComboBoxResultType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ComboBoxResultType.FormattingEnabled = true;
-            this.ComboBoxResultType.Items.AddRange(new object[] {
-            "ModType",
-            "StmtType",
-            "ExprType",
-            "AstStmtSeq",
-            "AstSeq"});
-            this.ComboBoxResultType.Location = new System.Drawing.Point(89, 72);
-            this.ComboBoxResultType.Name = "ComboBoxResultType";
-            this.ComboBoxResultType.Size = new System.Drawing.Size(244, 23);
-            this.ComboBoxResultType.TabIndex = 7;
+            this.ComboBoxType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ComboBoxType.FormattingEnabled = true;
+            this.ComboBoxType.Location = new System.Drawing.Point(89, 64);
+            this.ComboBoxType.Name = "ComboBoxType";
+            this.ComboBoxType.Size = new System.Drawing.Size(244, 23);
+            this.ComboBoxType.TabIndex = 7;
+            this.ComboBoxType.SelectedIndexChanged += new System.EventHandler(this.ComboBoxType_SelectedIndexChanged);
+            // 
+            // ComboBoxKind
+            // 
+            this.ComboBoxKind.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ComboBoxKind.FormattingEnabled = true;
+            this.ComboBoxKind.Location = new System.Drawing.Point(89, 93);
+            this.ComboBoxKind.Name = "ComboBoxKind";
+            this.ComboBoxKind.Size = new System.Drawing.Size(244, 23);
+            this.ComboBoxKind.TabIndex = 9;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.ForeColor = System.Drawing.SystemColors.ControlLight;
+            this.label4.Location = new System.Drawing.Point(14, 96);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(69, 15);
+            this.label4.TabIndex = 8;
+            this.label4.Text = "Result Kind:";
             // 
             // Form1
             // 
@@ -132,7 +148,9 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.ClientSize = new System.Drawing.Size(836, 583);
-            this.Controls.Add(this.ComboBoxResultType);
+            this.Controls.Add(this.ComboBoxKind);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.ComboBoxType);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.buttonGenerate);
             this.Controls.Add(this.OutputBox);
@@ -156,6 +174,8 @@
         private RichTextBox OutputBox;
         private Button buttonGenerate;
         private Label label3;
-        private ComboBox ComboBoxResultType;
+        private ComboBox ComboBoxType;
+        private ComboBox ComboBoxKind;
+        private Label label4;
     }
 }

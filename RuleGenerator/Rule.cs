@@ -10,10 +10,10 @@ namespace RuleGenerator
     {
         public readonly string Name;
         public readonly string Format;
-        public readonly string ResultType;
+        public readonly ResultType ResultType;
         public string Rules;
 
-        public Rule(string name, string format, string resultType)
+        public Rule(string name, string format, ResultType resultType)
         {
             Name = name;
             Format = format;
@@ -32,7 +32,7 @@ namespace RuleGenerator
         {
             string result =
 $@"// {Name}: {Format}
-private static {ResultType} Rule{char.ToUpper(Name[0]) + Name.Substring(1)}(ref Parser p)
+private static {ResultType}? Rule{char.ToUpper(Name[0]) + Name.Substring(1)}(ref Parser p)
 {{
     if (p.Level++ == MAXSTACK)
     {{
@@ -43,10 +43,10 @@ private static {ResultType} Rule{char.ToUpper(Name[0]) + Name.Substring(1)}(ref 
     if (p.ErrorIndicator)
     {{
         p.Level--;
-        return;
+        return null;
     }}
     
-    {ResultType} result = null;
+    {ResultType}? result = null;
     int mark = p.Mark;
     
     
