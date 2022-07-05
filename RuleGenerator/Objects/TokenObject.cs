@@ -66,6 +66,7 @@ namespace RuleGenerator.Objects
             new StringTokenPair("/=", TokenType.FSLASHEQUAL),
             new StringTokenPair(">=", TokenType.GREATEREQUAL),
             new StringTokenPair("<=", TokenType.LESSEQUAL),
+            new StringTokenPair(":=", TokenType.COLONEQUAL),
             new StringTokenPair("++", TokenType.DOUBLEADD),
             new StringTokenPair("--", TokenType.DOUBLEMINUS),
             new StringTokenPair("..", TokenType.ELLIPSIS),
@@ -82,7 +83,7 @@ namespace RuleGenerator.Objects
             new StringTokenPair("NT_OFFSET", TokenType.NT_OFFSET)
         };
 
-        public TokenObject(string value, TokenType tokenType) : base("token")
+        public TokenObject(string value, TokenType tokenType) : base("token", $"'{value}'")
         {
             Value = value;
             TokenType = tokenType;

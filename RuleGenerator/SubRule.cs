@@ -10,124 +10,60 @@ namespace RuleGenerator
     internal class SubRule
     {
         public readonly string Format;
-        public List<RObject> Objects;
+        public RObject[] Objects;
 
         public SubRule(string format)
         {
             Format = format;
-            Objects = new List<RObject>();
-
-            Generate();
+            Objects = RObject.GetObjectsFromFormat(format);
         }
 
-        private void Generate()
+        public static SubRule[] GetSubRulesFromFormat(string format)
         {
+            List<SubRule> subRules = new List<SubRule>();
+            List<string> ruleFormats = new List<string>();
             int parenLevel = 0;
             bool inQuote = false;
 
-            string value = "";
-            RObject obj = new RObject("null");
-            Conditions conditions = Conditions.Default;
-            for (int i = 0; i < Format.Length; i++)
+            string f = "";
+            foreach (char c in format)
             {
-                char c = Format[i];
-                if (c == '\'' || c == '"')
-                {
-                    value = "";
-                    char beginQuote = c;
-                    c = Format[++i];
-                    while (c != beginQuote)
-                    {
-                        value += c;
-                        if (i + 1 == Format.Length)
-                            break;
-                        c = Format[++i];
-                    }
-                    obj = TokenObject.FromQuote(value);
-                    continue;
-                }
+                if (c == '"' || c == '\'')
+                    inQuote = !inQuote;
+
                 else if (c == '(' || c == '[')
+                    parenLevel++;
+                else if (c == ')' || c == ']')
+                    parenLevel--;
+
+                if (c == '|' && parenLevel == 0 && !inQuote)
                 {
-                    value = c.ToString();
-                    char endParen = (c == '(' ? ')' : ']');
-                    int level = 0;
-                    c = Format[++i];
-                    while (c != endParen || level != 0)
+                    if (f.Length > 0)
                     {
-                        if (c == '(' || c == '[')
-                            level++;
-                        else if (c == ')' || c == ']')
-                            level--;
-                        value += c;
-                        if (i + 1 == Format.Length)
-                            break;
-                        c = Format[++i];
+                        ruleFormats.Add(f.Trim());
+                        f = "";
                     }
-                    value += c;
-                    continue;
-                }
-                else if (IsPotentialIdentifierStart(c))
-                {
-                    value = "";
-                    while(IsPotentialIdentifierChar(c))
-                    {
-                        value += c;
-                        if (i + 1 == Format.Length)
-                            break;
-                        c = Format[++i];
-                    }
-                    obj = TokenObject.FromID(value);
-                    if (obj.Type == "null")
-                        obj = new RuleObject(value);
-                }
-                else if (c == '$')
-                {
-                    obj = new TokenObject("$", CronusScript.Parser.TokenType.ENDMARKER);
                     continue;
                 }
 
-                if (c == '+')
-                    conditions |= Conditions.Loop;
-                else if (c == '*')
-                    conditions |= Conditions.Loop_Opt;
-                else if (c == '!')
-                    conditions |= Conditions.Not;
-
-                if (c == ' ')
-                {
-                    obj.Conditions = conditions;
-                    Objects.Add(obj);
-                    obj = new RObject("null");
-                    conditions = Conditions.Default;
-                }
+                f += c;
             }
-            if (obj.Type != "null")
+
+            if (f.Length > 0)
+                ruleFormats.Add(f.Trim());
+
+            foreach (string ruleFormat in ruleFormats)
             {
-                obj.Conditions = conditions;
-                Objects.Add(obj);
+                SubRule subRule = new SubRule(ruleFormat);
+                subRules.Add(subRule);
             }
+
+            return subRules.ToArray();
         }
 
-        private void AddObject(RObject rule)
+        public override string ToString()
         {
-            Objects.Add(rule);
-        }
-
-        private static bool IsPotentialIdentifierStart(int c)
-        {
-            return ((c >= 'a' && c <= 'z')
-               || (c >= 'A' && c <= 'Z')
-               || c == '_'
-               || (c >= 128));
-        }
-
-        private static bool IsPotentialIdentifierChar(int c)
-        {
-            return ((c >= 'a' && c <= 'z')
-               || (c >= 'A' && c <= 'Z')
-               || (c >= '0' && c <= '9')
-               || c == '_'
-               || (c >= 128));
+            return $"sub_rule: {Format}";
         }
     }
 }

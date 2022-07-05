@@ -1,0 +1,23 @@
+﻿public static RULE_RESULT_TYPE? RuleRULE_NAME(ref Parser p)
+{
+    if (p.Level++ == MAXSTACK)
+    {
+        p.ErrorIndicator = true;
+        /// TODO: ERROR HANDLING
+        Console.WriteLine("No memory");
+    }
+    if (p.ErrorIndicator)
+    {
+        p.Level--;
+        return null;
+    }
+    RULE_RESULT_TYPE? result = null;
+    int mark = p.Mark;
+
+    RULE_SUB_RULES
+    
+    result = null;
+done:
+    p.Level--;
+    return result;
+}

@@ -1,3 +1,4 @@
+using RuleGenerator.Templates;
 using System.Text.RegularExpressions;
 
 namespace RuleGenerator
@@ -24,7 +25,8 @@ namespace RuleGenerator
         private void buttonGenerate_Click(object sender, EventArgs e)
         {
             string name = textRuleName.Text;
-            string format = textRuleFormat.Text;
+            string format = textRuleFormat.Text.ReplaceLineEndings("");
+            format = Regex.Replace(format, @"\s+", " ");
 
             if (name == "")
             {
@@ -42,7 +44,7 @@ namespace RuleGenerator
             Generate(name, format, resultType);
 
             // Output the result
-            OutputBox.Text = Rule.ToString();
+            OutputBox.Text = Template.GenerateNamedRule(Rule);
         }
 
         private void Generate(string name, string format, ResultType resultType)
@@ -54,49 +56,6 @@ namespace RuleGenerator
                 return;
 
             Rule = new Rule(name, format, resultType);
-
-            string rules = GenerateSubRules(format);
-        }
-
-        private string GenerateSubRules(string format)
-        {
-            string result = "";
-
-            List<string> ruleFormats = new List<string>();
-            int parenLevel = 0;
-            bool inQuote = false;
-
-            string f = "";
-            foreach (char c in format)
-            {
-                if (c == '"' || c == '\'')
-                    inQuote = !inQuote;
-
-                else if (c == '(' || c == '[')
-                    parenLevel++;
-                else if (c == ')' || c == ']')
-                    parenLevel--;
-
-                if (c == '|' && parenLevel == 0 && !inQuote)
-                {
-                    ruleFormats.Add(f.Trim());
-                    f = "";
-                    continue;
-                }
-
-                f += c;
-            }
-
-            if (f.Length > 0)
-                ruleFormats.Add(f);
-
-            foreach (string ruleFormat in ruleFormats)
-            {
-                SubRule subRule = new SubRule(ruleFormat);
-
-            }
-
-            return result;
         }
 
         private void ComboBoxType_SelectedIndexChanged(object sender, EventArgs e)
@@ -106,19 +65,19 @@ namespace RuleGenerator
 
             switch (type)
             {
-                case NodeType.Mod:
+                case NodeType.ModType:
                     enm = typeof(CronusScript.Parser.ModKind);
                     break;
-                case NodeType.Stmt:
+                case NodeType.StmtType:
                     enm = typeof(CronusScript.Parser.StmtKind);
                     break;
-                case NodeType.Expr:
+                case NodeType.ExprType:
                     enm = typeof(CronusScript.Parser.ExprKind);
                     break;
-                case NodeType.ExceptHandler:
+                case NodeType.ExceptHandlerType:
                     enm = typeof(CronusScript.Parser.ExceptHandlerKind);
                     break;
-                case NodeType.TypeIgnore:
+                case NodeType.TypeIgnoreType:
                     enm = typeof(CronusScript.Parser.TypeIgnoreKind);
                     break;
             }

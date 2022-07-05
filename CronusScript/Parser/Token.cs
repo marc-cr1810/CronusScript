@@ -65,6 +65,7 @@ namespace CronusScript.Parser
 		FSLASHEQUAL,    // /=
 		GREATEREQUAL,   // >=
 		LESSEQUAL,      // <=
+		COLONEQUAL,		// :=
 		DOUBLEADD,      // ++
 		DOUBLEMINUS,    // --
 		ELLIPSIS,       // ..

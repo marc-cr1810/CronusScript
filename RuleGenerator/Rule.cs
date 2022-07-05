@@ -11,52 +11,16 @@ namespace RuleGenerator
         public readonly string Name;
         public readonly string Format;
         public readonly ResultType ResultType;
-        public string Rules;
+        public SubRule[] Rules;
 
         public Rule(string name, string format, ResultType resultType)
         {
             Name = name;
             Format = format;
             ResultType = resultType;
-            Rules = "{}";
+            Rules = SubRule.GetSubRulesFromFormat(format);
 
             Program.AddRule(this);
-        }
-
-        public void SetRules(string rules)
-        {
-            Rules = rules;
-        }
-
-        public override string ToString()
-        {
-            string result =
-$@"// {Name}: {Format}
-private static {ResultType}? Rule{char.ToUpper(Name[0]) + Name.Substring(1)}(ref Parser p)
-{{
-    if (p.Level++ == MAXSTACK)
-    {{
-        p.ErrorIndicator = true;
-        /// TODO: ERROR HANDLING
-        Console.WriteLine(""No memory"");
-    }}
-    if (p.ErrorIndicator)
-    {{
-        p.Level--;
-        return null;
-    }}
-    
-    {ResultType}? result = null;
-    int mark = p.Mark;
-    
-    
-    
-    result = null;
-done:
-    p.Level--;
-    return result;
-}}";
-            return result;
         }
     }
 }

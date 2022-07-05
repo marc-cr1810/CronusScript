@@ -9,17 +9,17 @@ namespace RuleGenerator
 {
     internal enum NodeType
     {
-        Mod = 1, ModSeq = 2, 
-        Stmt = 3, StmtSeq = 4, StmtSeqSeq = 5,
-        Expr = 6, ExprSeq = 7,
-        Comprehension = 8, ComprehensionSeq = 9,
-        ExceptHandler = 10, ExceptHandlerSeq = 11,
-        Arguments = 12,
-        Arg = 13, ArgSeq = 14,
-        Keyword = 15, KeywordSeq = 16,
-        Alias = 17, AliasSeq = 18,
-        WithItem = 19, WithItemSeq = 20,
-        TypeIgnore = 21, TypeIgnoreSeq = 22
+        ModType = 1, ModSeq = 2, 
+        StmtType = 3, StmtSeq = 4, StmtSeqSeq = 5,
+        ExprType = 6, ExprSeq = 7,
+        ComprehensionType = 8, ComprehensionSeq = 9,
+        ExceptHandlerType = 10, ExceptHandlerSeq = 11,
+        ArgumentsType = 12,
+        ArgType = 13, ArgSeq = 14,
+        KeywordType = 15, KeywordSeq = 16,
+        AliasType = 17, AliasSeq = 18,
+        WithItemType = 19, WithItemSeq = 20,
+        TypeIgnoreType = 21, TypeIgnoreSeq = 22
     }
 
     internal struct NodeTypeKind

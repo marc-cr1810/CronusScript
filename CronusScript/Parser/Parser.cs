@@ -378,7 +378,7 @@ namespace CronusScript.Parser
         }
 
         // compound_stmt:
-        //     | &('def' | '@' | ASYNC) function_def
+        //     | &('func' | '@' | ASYNC) function_def
         //     | &'if' if_stmt
         //     | &('class' | '@') class_def
         //     | &('with' | ASYNC) with_stmt

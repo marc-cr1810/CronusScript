@@ -339,6 +339,13 @@ namespace CronusScript.Parser
                             return TokenType.ELLIPSIS;
                     }
                     break;
+                case ':':
+                    switch (c2)
+                    {
+                        case '=':
+                            return TokenType.COLONEQUAL;
+                    }
+                    break;
             }
             return TokenType.OP;
         }

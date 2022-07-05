@@ -8,15 +8,15 @@ namespace RuleGenerator.Objects
 {
     internal class RuleObject : RObject
     {
-        public string Name;
+        public readonly string Name;
         public ResultType? ExpectedResult;
 
         public RuleObject(string name) : this(name, null)
         {
-
+            Name = name;
         }
 
-        public RuleObject(string name, ResultType? resultType) : base("rule")
+        public RuleObject(string name, ResultType? resultType) : base("rule", name)
         {
             Name = name;
             ExpectedResult = resultType;

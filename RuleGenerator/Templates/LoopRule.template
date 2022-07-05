@@ -1,0 +1,51 @@
+﻿private static LOOP_RULE_RESULT_TYPE? LoopRuleLOOP_RULE_NUM(ref Parser p)
+{
+    if (p.Level++ == MAXSTACK)
+    {
+        p.ErrorIndicator = true;
+        /// TODO: ERROR HANDLING
+        Console.WriteLine("No memory");
+    }
+    if (p.ErrorIndicator)
+    {
+        p.Level--;
+        return null;
+    }
+
+    LOOP_RULE_ELEM_RESULT_TYPE? result = null;
+    int mark = p.Mark;
+    List<LOOP_RULE_ELEM_RESULT_TYPE?> children = new List<LOOP_RULE_ELEM_RESULT_TYPE?>();
+    int n = 0;
+
+    { // FORMAT
+        if (p.ErrorIndicator)
+        {
+            p.Level--;
+            return null;
+        }
+        PrintTest(ref p, "looprule_LOOP_RULE_NUM", "FORMAT", mark);
+        OBJECTS
+        while (
+            OBJECT_CONDITIONALS
+        )
+        {
+            result = RESULT;
+            children.Add(result);
+            n++;
+            mark = p.Mark;
+        }
+        p.Mark = mark;
+        PrintFail(ref p, "looprule_LOOP_RULE_NUM", "FORMAT", mark);
+    }
+
+    if (n == 0 || p.ErrorIndicator)
+    {
+        p.Level--;
+        return null;
+    }
+
+    LOOP_RULE_RESULT_TYPE seq = new LOOP_RULE_RESULT_TYPE();
+    seq.Elements = children.ToArray();
+    p.Level--;
+    return seq;
+}

@@ -1,0 +1,25 @@
+﻿{ // FORMAT
+    if (p.ErrorIndicator)
+    {
+        p.Level--;
+        return null;
+    }
+    PrintTest(ref p, "RULE_NAME", "FORMAT", mark);
+    OBJECTS
+    if (
+        OBJECT_CONDITIONALS
+    )
+    {
+        PrintSuccess(ref p, "RULE_NAME", "FORMAT", mark);
+        result = RESULT;
+        if (result == null)  /// TODO: ERROR HANDLING Check for errors
+        {
+            p.ErrorIndicator = true;
+            p.Level--;
+            return null;
+        }
+        goto done;
+    }
+    p.Mark = mark;
+    PrintFail(ref p, "RULE_NAME", "FORMAT", mark);
+}
