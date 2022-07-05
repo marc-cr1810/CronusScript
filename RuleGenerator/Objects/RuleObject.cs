@@ -6,13 +6,20 @@ using System.Threading.Tasks;
 
 namespace RuleGenerator.Objects
 {
-    internal class RuleObject
+    internal class RuleObject : RObject
     {
-        public readonly string Type;
+        public string Name;
+        public ResultType? ExpectedResult;
 
-        public RuleObject(string type)
+        public RuleObject(string name) : this(name, null)
         {
-            Type = type;
+
+        }
+
+        public RuleObject(string name, ResultType? resultType) : base("rule")
+        {
+            Name = name;
+            ExpectedResult = resultType;
         }
     }
 }
