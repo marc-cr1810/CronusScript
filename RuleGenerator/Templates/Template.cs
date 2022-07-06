@@ -1,7 +1,7 @@
-﻿using RuleGenerator.Objects;
+﻿using CronusScript.Parser;
+using RuleGenerator.Objects;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,16 +29,16 @@ namespace RuleGenerator.Templates
         {
             string result = File.ReadAllText($"{FolderPath}NamedRule.template");
 
-            string name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(rule.Name.ToLower()).Replace("_", "");
+            string name = rule.GetRuleFunctionName();
 
             ReplaceValue(ref result, RULE_NAME, name);
             ReplaceValue(ref result, RULE_RESULT_TYPE, rule.ResultType.Type.ToString());
-            ReplaceValue(ref result, RULE_SUB_RULES, GenerateSubRules(rule.Name, rule.Rules, 1));
+            ReplaceValue(ref result, RULE_SUB_RULES, GenerateSubRules(rule.Name, rule.ResultType, rule.Rules, 1));
 
             return result;
         }
 
-        private static string GenerateSubRules(string ruleName, SubRule[] subRules, int tabs = 0)
+        private static string GenerateSubRules(string ruleName, ResultType? expected, SubRule[] subRules, int tabs = 0)
         {
             string result = "";
 
@@ -46,9 +46,14 @@ namespace RuleGenerator.Templates
             {
                 SubRule subRule = subRules[i];
                 string template = File.ReadAllText($"{FolderPath}SubRule.template");
+
+                Dictionary<string, RObject> objects = GetObjectNames(subRule.Objects);
+
                 ReplaceValue(ref template, FORMAT, subRule.Format);
                 ReplaceValue(ref template, RULE_NAME, ruleName);
-                ReplaceValue(ref template, OBJECTS, GenerateObjects(subRule.Objects, tabs));
+                ReplaceValue(ref template, OBJECTS, GenerateObjects(objects, tabs));
+                ReplaceValue(ref template, OBJECT_CONDITIONALS, GenerateObjectConditionals(objects, tabs + 1));
+                ReplaceValue(ref template, RESULT, GenerateResult(expected, subRule.Objects));
 
                 result += template + (i < subRules.Length - 1 ? "\n" : "");
             }
@@ -56,31 +61,25 @@ namespace RuleGenerator.Templates
             return InsertTabs(result, tabs);
         }
 
-        private static string GenerateObjects(RObject[] objects, int tabs = 0)
+        private static string GenerateObjects(Dictionary<string, RObject> objects, int tabs = 0)
         {
             int literals = 0;
             int vars = 0;
 
             string result = "";
 
-            for (int i = 0; i < objects.Length; i++)
+            for (int i = 0; i < objects.Keys.Count; i++)
             {
+                string name = objects.Keys.ElementAt(i);
+                RObject obj = objects[name];
                 string str = "";
-                RObject obj = objects[i];
-
-                if (obj.Conditions.HasFlag(Conditions.Not))
-                    continue;
 
                 switch (obj.Type)
                 {
                     case "token":
                         {
                             TokenObject tokenObj = obj as TokenObject;
-                            str = "Token? ";
-
-                            if (obj.Conditions.HasFlag(Conditions.Optional))
-                                str += $"opt_";
-                            str += "literal" + (literals > 0 ? $"_{literals}" : "") + $"_{tokenObj.TokenType};";
+                            str = $"Token? {name}";
                             literals++;
                         }
                         break;
@@ -92,9 +91,7 @@ namespace RuleGenerator.Templates
                             if (ruleObj.ExpectedResult != null)
                                 str = $"{ruleObj.ExpectedResult.Value.Type}? ";
 
-                            if (obj.Conditions.HasFlag(Conditions.Optional))
-                                str += $"opt_";
-                            str += "var" + (vars > 0 ? $"_{vars}" : "") + $"_{ruleObj.Name};";
+                            str += name;
                             vars++;
                         }
                         break;
@@ -106,9 +103,7 @@ namespace RuleGenerator.Templates
                             if (gatherObject.ExpectedResult != null)
                                 str = $"{gatherObject.ExpectedResult.Value.Type}? ";
 
-                            if (obj.Conditions.HasFlag(Conditions.Optional))
-                                str += $"opt_";
-                            str += "var" + (vars > 0 ? $"_{vars}" : "") + ";";
+                            str += name;
                             vars++;
                         }
                         break;
@@ -120,9 +115,7 @@ namespace RuleGenerator.Templates
                             if (groupObject.ExpectedResult != null)
                                 str = $"{groupObject.ExpectedResult.Value.Type}? ";
 
-                            if (obj.Conditions.HasFlag(Conditions.Optional))
-                                str += $"opt_";
-                            str += "var" + (vars > 0 ? $"_{vars}" : "") + ";";
+                            str += name;
                             vars++;
                         }
                         break;
@@ -134,18 +127,171 @@ namespace RuleGenerator.Templates
                             if (ruleGroupObject.ExpectedResult != null)
                                 str = $"{ruleGroupObject.ExpectedResult.Value.Type}? ";
 
-                            if (obj.Conditions.HasFlag(Conditions.Optional))
-                                str += $"opt_";
-                            str += "var" + (vars > 0 ? $"_{vars}" : "") + ";";
+                            str += name;
                             vars++;
                         }
                         break;
                 }
 
-                result += str + (i < objects.Length - 1 ? "\n" : "");
+                if (obj.Conditions.HasFlag(Conditions.Not))
+                    continue;
+
+                result += str + (i < objects.Keys.Count - 1 ? ";\n" : ";");
             }
 
             return InsertTabs(result, tabs);
+        }
+
+        private static string GenerateObjectConditionals(Dictionary<string, RObject> objects, int tabs = 0)
+        {
+            string result = "";
+            int literals = 0;
+            int vars = 0;
+
+            for (int i = 0; i < objects.Keys.Count; i++)
+            {
+                string name = objects.Keys.ElementAt(i);
+                RObject obj = objects[name];
+                string str = "";
+                string comment = "";
+                bool handledOpt = false;
+
+                switch (obj.Type)
+                {
+                    case "token":
+                        {
+                            TokenObject tokenObj = obj as TokenObject;
+                            str = $"({name} = Generator.ExpectToken(ref p, TokenType.{tokenObj.TokenType})) != null";
+                            comment = $"token='{tokenObj.Value}'";
+                        }
+                        break;
+                    case "rule":
+                        {
+                            RuleObject ruleObj = obj as RuleObject;
+                            str = $"({name} = {ruleObj.GetRuleFunctionName()}(ref p)) != null";
+                        }
+                        break;
+                }
+
+                if (comment == "")
+                    comment = $"{obj.Format}";
+                if (obj.Conditions.HasFlag(Conditions.Optional) && !handledOpt)
+                    str = $"{str} || !p.ErrorIndicator";
+
+                str = $"({str}) // {comment}";
+                result += str + (i < objects.Keys.Count - 1 ? "\n&&\n" : "");
+            }
+
+            return InsertTabs(result, tabs);
+        }
+
+        private static string GenerateResult(ResultType? expected, RObject[] objects)
+        {
+            string result = "";
+
+            if (expected == null)
+                return "null";
+
+            NodeType? type = expected.Value.Type;
+            NodeTypeKind? kind = expected.Value.Kind;
+
+            if (type == null)
+                return "null";
+
+            switch (type)
+            {
+                case NodeType.ModType:
+                    {
+                        if (kind != null)
+                        {
+                            switch (kind.Value.ModKind)
+                            {
+                                case ModKind.Module:
+                                    {
+                                        result = "Generator.MakeModule(ref p, )";
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+            }
+
+            return result;
+        }
+
+        private static string GetParamObject(Dictionary<string, RObject> objects, NodeType type)
+        {
+            string result = "null";
+
+
+
+            return result;
+        }
+
+        private static Dictionary<string, RObject> GetObjectNames(RObject[] objects)
+        {
+            Dictionary<string, RObject> result = new Dictionary<string, RObject>();
+
+            int literals = 0;
+            int vars = 0;
+
+            foreach (RObject obj in objects)
+            {
+                string name = "";
+                switch (obj.Type)
+                {
+                    case "token":
+                        {
+                            TokenObject tokenObj = obj as TokenObject;
+
+                            if (obj.Conditions.HasFlag(Conditions.Optional))
+                                name += $"opt_";
+                            name += "literal" + (literals > 0 ? $"_{literals}" : "") + $"_{tokenObj.TokenType}";
+                            literals++;
+                        }
+                        break;
+                    case "rule":
+                        {
+                            RuleObject ruleObj = obj as RuleObject;
+
+                            if (obj.Conditions.HasFlag(Conditions.Optional))
+                                name += $"opt_";
+                            name += "var" + (vars > 0 ? $"_{vars}" : "") + $"_{ruleObj.Name}";
+                            vars++;
+                        }
+                        break;
+                    case "gather":
+                        {
+                            GatherObject gatherObject = obj as GatherObject;
+                            if (obj.Conditions.HasFlag(Conditions.Optional))
+                                name += $"opt_";
+                            name += "var" + (vars > 0 ? $"_{vars}" : "");
+                            vars++;
+                        }
+                        break;
+                    case "group":
+                        {
+                            GroupObject groupObject = obj as GroupObject;
+                            if (obj.Conditions.HasFlag(Conditions.Optional))
+                                name += $"opt_";
+                            name += "var" + (vars > 0 ? $"_{vars}" : "");
+                            vars++;
+                        }
+                        break;
+                    case "rule_group":
+                        {
+                            RuleGroupObject ruleGroupObject = obj as RuleGroupObject;
+                            if (obj.Conditions.HasFlag(Conditions.Optional))
+                                name += $"opt_";
+                            name += "var" + (vars > 0 ? $"_{vars}" : "");
+                            vars++;
+                        }
+                        break;
+                }
+                result.Add(name, obj);
+            }
+            return result;
         }
 
         private static void ReplaceValue(ref string template, string name, string value)

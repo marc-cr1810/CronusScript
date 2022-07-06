@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,11 @@ namespace RuleGenerator.Objects
         {
             Name = name;
             ExpectedResult = resultType;
+        }
+
+        public string GetRuleFunctionName()
+        {
+            return "Rule" + CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Name.ToLower()).Replace("_", "");
         }
     }
 }

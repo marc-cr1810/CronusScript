@@ -127,7 +127,7 @@ namespace RuleGenerator.Objects
                 }
                 else if (c == '$')
                 {
-                    obj = new TokenObject("$", CronusScript.Parser.TokenType.ENDMARKER);
+                    obj = new TokenObject("ENDMARKER", CronusScript.Parser.TokenType.ENDMARKER);
                     continue;
                 }
 

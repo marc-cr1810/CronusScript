@@ -1,3 +1,4 @@
+using CronusScript.Parser;
 using RuleGenerator.Templates;
 using System.Text.RegularExpressions;
 
@@ -41,6 +42,40 @@ namespace RuleGenerator
             ResultType resultType = new ResultType();
             resultType.Type = (NodeType)Enum.Parse(typeof(NodeType), ComboBoxType.Text);
 
+            if (ComboBoxKind.Text != "No kind")
+            {
+                NodeTypeKind kind = new NodeTypeKind();
+                switch (resultType.Type)
+                {
+                    case NodeType.ModType:
+                        {
+                            kind.ModKind = (ModKind)Enum.Parse(typeof(ModKind), ComboBoxKind.Text);
+                        }
+                        break;
+                    case NodeType.StmtType:
+                        {
+                            kind.StmtKind = (StmtKind)Enum.Parse(typeof(StmtKind), ComboBoxKind.Text);
+                        }
+                        break;
+                    case NodeType.ExprType:
+                        {
+                            kind.ExprKind = (ExprKind)Enum.Parse(typeof(ExprKind), ComboBoxKind.Text);
+                        }
+                        break;
+                    case NodeType.ExceptHandlerType:
+                        {
+                            kind.ExceptHandlerKind = (ExceptHandlerKind)Enum.Parse(typeof(ExceptHandlerKind), ComboBoxKind.Text);
+                        }
+                        break;
+                    case NodeType.TypeIgnoreType:
+                        {
+                            kind.TypeIgnoreKind = (TypeIgnoreKind)Enum.Parse(typeof(TypeIgnoreKind), ComboBoxKind.Text);
+                        }
+                        break;
+                }
+                resultType.Kind = kind;
+            }
+
             Generate(name, format, resultType);
 
             // Output the result
@@ -82,11 +117,15 @@ namespace RuleGenerator
                     break;
             }
 
-            if (enm == null)
-                return;
-
             ComboBoxKind.Items.Clear();
             ComboBoxKind.Items.Add("No kind");
+
+            if (enm == null)
+            {
+                ComboBoxKind.SelectedIndex = 0;
+                return;
+            }
+
             foreach (string nodeTypeKind in Enum.GetNames(enm))
             {
                 ComboBoxKind.Items.Add(nodeTypeKind);

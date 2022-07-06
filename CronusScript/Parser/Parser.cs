@@ -177,7 +177,7 @@ namespace CronusScript.Parser
                 StmtSeq? a;
                 Token? endmarker_var;
                 if (
-                    ((a = RuleStatements(ref p)) != null && !p.ErrorIndicator) // statements?
+                    ((a = RuleStatements(ref p)) != null || !p.ErrorIndicator) // statements?
                     &&
                     ((endmarker_var = Generator.ExpectToken(ref p, TokenType.ENDMARKER)) != null) // token='ENDMARKER'
                 )
