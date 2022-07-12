@@ -38,6 +38,8 @@
             this.ComboBoxKind = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.textRuleFormat = new System.Windows.Forms.RichTextBox();
+            this.RulesTree = new System.Windows.Forms.TreeView();
+            this.buttonAdd = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -70,24 +72,26 @@
             // 
             // OutputBox
             // 
+            this.OutputBox.AcceptsTab = true;
             this.OutputBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.OutputBox.BackColor = System.Drawing.Color.DimGray;
+            this.OutputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
             this.OutputBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.OutputBox.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.OutputBox.ForeColor = System.Drawing.SystemColors.ControlLight;
-            this.OutputBox.Location = new System.Drawing.Point(12, 141);
+            this.OutputBox.Font = new System.Drawing.Font("Courier New", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.OutputBox.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.OutputBox.Location = new System.Drawing.Point(282, 141);
             this.OutputBox.Name = "OutputBox";
             this.OutputBox.ReadOnly = true;
-            this.OutputBox.Size = new System.Drawing.Size(812, 430);
+            this.OutputBox.Size = new System.Drawing.Size(694, 430);
             this.OutputBox.TabIndex = 4;
             this.OutputBox.Text = "";
+            this.OutputBox.WordWrap = false;
             // 
             // buttonGenerate
             // 
             this.buttonGenerate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonGenerate.Location = new System.Drawing.Point(749, 112);
+            this.buttonGenerate.Location = new System.Drawing.Point(901, 112);
             this.buttonGenerate.Name = "buttonGenerate";
             this.buttonGenerate.Size = new System.Drawing.Size(75, 23);
             this.buttonGenerate.TabIndex = 5;
@@ -141,17 +145,42 @@
             this.textRuleFormat.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.textRuleFormat.Location = new System.Drawing.Point(89, 38);
             this.textRuleFormat.Name = "textRuleFormat";
-            this.textRuleFormat.Size = new System.Drawing.Size(654, 97);
+            this.textRuleFormat.Size = new System.Drawing.Size(806, 97);
             this.textRuleFormat.TabIndex = 10;
             this.textRuleFormat.Text = "";
             // 
+            // RulesTree
+            // 
+            this.RulesTree.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.RulesTree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.RulesTree.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.RulesTree.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.RulesTree.Location = new System.Drawing.Point(12, 141);
+            this.RulesTree.Name = "RulesTree";
+            this.RulesTree.Size = new System.Drawing.Size(264, 430);
+            this.RulesTree.TabIndex = 11;
+            // 
+            // buttonAdd
+            // 
+            this.buttonAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonAdd.Location = new System.Drawing.Point(901, 83);
+            this.buttonAdd.Name = "buttonAdd";
+            this.buttonAdd.Size = new System.Drawing.Size(75, 23);
+            this.buttonAdd.TabIndex = 12;
+            this.buttonAdd.Text = "Add Rule";
+            this.buttonAdd.UseVisualStyleBackColor = true;
+            this.buttonAdd.Click += new System.EventHandler(this.buttonAdd_Click);
+            // 
             // Form1
             // 
-            this.AcceptButton = this.buttonGenerate;
+            this.AcceptButton = this.buttonAdd;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.ClientSize = new System.Drawing.Size(836, 583);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.ClientSize = new System.Drawing.Size(988, 583);
+            this.Controls.Add(this.buttonAdd);
+            this.Controls.Add(this.RulesTree);
             this.Controls.Add(this.textRuleFormat);
             this.Controls.Add(this.ComboBoxKind);
             this.Controls.Add(this.label4);
@@ -181,5 +210,7 @@
         private ComboBox ComboBoxKind;
         private Label label4;
         private RichTextBox textRuleFormat;
+        private TreeView RulesTree;
+        private Button buttonAdd;
     }
 }

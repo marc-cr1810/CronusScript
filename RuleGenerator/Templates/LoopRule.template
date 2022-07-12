@@ -1,4 +1,5 @@
-﻿private static LOOP_RULE_RESULT_TYPE? LoopRuleLOOP_RULE_NUM(ref Parser p)
+﻿// LOOP_RULE_FORMAT
+private static LOOP_RULE_RESULT_TYPE? LoopRuleLOOP_RULE_NUM(ref Parser p)
 {
     if (p.Level++ == MAXSTACK)
     {

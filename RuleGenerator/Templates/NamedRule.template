@@ -1,4 +1,5 @@
-﻿public static RULE_RESULT_TYPE? RuleRULE_NAME(ref Parser p)
+﻿// RULE_FORMAT
+private static RULE_RESULT_TYPE? RuleRULE_NAME(ref Parser p)
 {
     if (p.Level++ == MAXSTACK)
     {

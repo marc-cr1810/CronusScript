@@ -175,11 +175,11 @@ namespace CronusScript.Parser
                 }
                 PrintTest(ref p, "file", "statements? $", mark);
                 StmtSeq? a;
-                Token? endmarker_var;
+                Token? literal_ENDMARKER;
                 if (
                     ((a = RuleStatements(ref p)) != null || !p.ErrorIndicator) // statements?
                     &&
-                    ((endmarker_var = Generator.ExpectToken(ref p, TokenType.ENDMARKER)) != null) // token='ENDMARKER'
+                    ((literal_ENDMARKER = Generator.ExpectToken(ref p, TokenType.ENDMARKER)) != null) // token='ENDMARKER'
                 )
                 {
                     PrintSuccess(ref p, "file", "statements? $", mark);
@@ -227,7 +227,7 @@ namespace CronusScript.Parser
                 PrintTest(ref p, "statements", "statement+", mark);
                 StmtSeqSeq? a;
                 if (
-                    ((a = LoopRule3(ref p)) != null)
+                    ((a = LoopRule0(ref p)) != null)
                 )
                 {
                     PrintSuccess(ref p, "statements", "statement+", mark);
@@ -251,8 +251,8 @@ namespace CronusScript.Parser
             return result;
         }
 
-        // looprule_3: statement
-        private static StmtSeqSeq? LoopRule3(ref Parser p)
+        // looprule_0: statement
+        private static StmtSeqSeq? LoopRule0(ref Parser p)
         {
             if (p.Level++ == MAXSTACK)
             {

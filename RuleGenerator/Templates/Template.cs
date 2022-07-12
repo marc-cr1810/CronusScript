@@ -2,6 +2,7 @@
 using RuleGenerator.Objects;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,10 +19,12 @@ namespace RuleGenerator.Templates
         private const string RESULT = "RESULT";
 
         private const string RULE_NAME = "RULE_NAME";
+        private const string RULE_FORMAT = "RULE_FORMAT";
         private const string RULE_RESULT_TYPE = "RULE_RESULT_TYPE";
         private const string RULE_SUB_RULES = "RULE_SUB_RULES";
 
         private const string LOOP_RULE_NUM = "LOOP_RULE_NUM";
+        private const string LOOP_RULE_FORMAT = "LOOP_RULE_FORMAT";
         private const string LOOP_RULE_RESULT_TYPE = "LOOP_RULE_RESULT_TYPE";
         private const string LOOP_RULE_ELEM_RESULT_TYPE = "LOOP_RULE_ELEM_RESULT_TYPE";
 
@@ -32,13 +35,14 @@ namespace RuleGenerator.Templates
             string name = rule.GetRuleFunctionName();
 
             ReplaceValue(ref result, RULE_NAME, name);
+            ReplaceValue(ref result, RULE_FORMAT, rule.ToString());
             ReplaceValue(ref result, RULE_RESULT_TYPE, rule.ResultType.Type.ToString());
             ReplaceValue(ref result, RULE_SUB_RULES, GenerateSubRules(rule.Name, rule.ResultType, rule.Rules, 1));
 
             return result;
         }
 
-        private static string GenerateSubRules(string ruleName, ResultType? expected, SubRule[] subRules, int tabs = 0)
+        private static string GenerateSubRules(string ruleName, ResultType expected, SubRule[] subRules, int tabs = 0)
         {
             string result = "";
 
@@ -48,12 +52,18 @@ namespace RuleGenerator.Templates
                 string template = File.ReadAllText($"{FolderPath}SubRule.template");
 
                 Dictionary<string, RObject> objects = GetObjectNames(subRule.Objects);
+                Dictionary<string, string> renamed = new Dictionary<string, string>();
 
                 ReplaceValue(ref template, FORMAT, subRule.Format);
                 ReplaceValue(ref template, RULE_NAME, ruleName);
-                ReplaceValue(ref template, OBJECTS, GenerateObjects(objects, tabs));
+                ReplaceValue(ref template, OBJECTS, GenerateObjects(objects, expected, tabs));
                 ReplaceValue(ref template, OBJECT_CONDITIONALS, GenerateObjectConditionals(objects, tabs + 1));
-                ReplaceValue(ref template, RESULT, GenerateResult(expected, subRule.Objects));
+                ReplaceValue(ref template, RESULT, GenerateResult(expected, objects, ref renamed));
+
+                foreach (KeyValuePair<string, string> rename in renamed)
+                {
+                    ReplaceValue(ref template, rename.Key, rename.Value);
+                }
 
                 result += template + (i < subRules.Length - 1 ? "\n" : "");
             }
@@ -61,7 +71,7 @@ namespace RuleGenerator.Templates
             return InsertTabs(result, tabs);
         }
 
-        private static string GenerateObjects(Dictionary<string, RObject> objects, int tabs = 0)
+        private static string GenerateObjects(Dictionary<string, RObject> objects, ResultType expected, int tabs = 0)
         {
             int literals = 0;
             int vars = 0;
@@ -73,6 +83,11 @@ namespace RuleGenerator.Templates
                 string name = objects.Keys.ElementAt(i);
                 RObject obj = objects[name];
                 string str = "";
+
+                if (obj.Conditions.HasFlag(Conditions.Loop) || obj.Conditions.HasFlag(Conditions.Loop_Opt))
+                {
+
+                }
 
                 switch (obj.Type)
                 {
@@ -86,7 +101,10 @@ namespace RuleGenerator.Templates
                     case "rule":
                         {
                             RuleObject ruleObj = obj as RuleObject;
+
                             /// TODO: Get rule type or create a new rule
+                            ruleObj.ExpectedResult = GetResultType(ruleObj.Name);
+
                             str = "object? ";
                             if (ruleObj.ExpectedResult != null)
                                 str = $"{ruleObj.ExpectedResult.Value.Type}? ";
@@ -185,7 +203,7 @@ namespace RuleGenerator.Templates
             return InsertTabs(result, tabs);
         }
 
-        private static string GenerateResult(ResultType? expected, RObject[] objects)
+        private static string GenerateResult(ResultType? expected, Dictionary<string, RObject> objects, ref Dictionary<string, string> renamed)
         {
             string result = "";
 
@@ -208,7 +226,8 @@ namespace RuleGenerator.Templates
                             {
                                 case ModKind.Module:
                                     {
-                                        result = "Generator.MakeModule(ref p, )";
+                                        string a = GetParamObject(objects, NodeType.StmtSeq, ref renamed);
+                                        result = $"Generator.MakeModule(ref p, {a})";
                                     }
                                     break;
                             }
@@ -220,11 +239,56 @@ namespace RuleGenerator.Templates
             return result;
         }
 
-        private static string GetParamObject(Dictionary<string, RObject> objects, NodeType type)
+        private static string GetParamObject(Dictionary<string, RObject> objects, NodeType type, ref Dictionary<string, string> renamed)
         {
             string result = "null";
 
-
+            foreach (KeyValuePair<string, RObject> kvp in objects)
+            {
+                RObject obj = kvp.Value;
+                switch (obj.Type)
+                {
+                    case "rule":
+                        {
+                            if (((RuleObject)obj).ExpectedResult.Value.Type == type)
+                            {
+                                result = kvp.Key;
+                                goto done;
+                            }
+                        }
+                        break;
+                    case "rule_group":
+                        {
+                            if (((RuleGroupObject)obj).ExpectedResult.Value.Type == type)
+                            {
+                                result = kvp.Key;
+                                goto done;
+                            }
+                        }
+                        break;
+                    case "group":
+                        {
+                            if (((GroupObject)obj).ExpectedResult.Value.Type == type)
+                            {
+                                result = kvp.Key;
+                                goto done;
+                            }
+                        }
+                        break;
+                    case "gather":
+                        {
+                            if (((GatherObject)obj).ExpectedResult.Value.Type == type)
+                            {
+                                result = kvp.Key;
+                                goto done;
+                            }
+                        }
+                        break;
+                }
+            done:
+                renamed.Add(kvp.Key, ((char)('a' + renamed.Count)).ToString());
+                return result;
+            }
 
             return result;
         }
@@ -239,6 +303,7 @@ namespace RuleGenerator.Templates
             foreach (RObject obj in objects)
             {
                 string name = "";
+
                 switch (obj.Type)
                 {
                     case "token":
@@ -292,6 +357,40 @@ namespace RuleGenerator.Templates
                 result.Add(name, obj);
             }
             return result;
+        }
+
+        private static ResultType? GetResultType(string rule)
+        {
+            if (!Program.Rules.ContainsKey(rule))
+                return null;
+
+            foreach (KeyValuePair<string, Rule> r in Program.Rules)
+            {
+                if (r.Key == rule)
+                {
+                    return r.Value.ResultType;
+                }
+            }
+            return null;
+        }
+
+
+        private static RuleObject GetLoopRule(string format, ResultType resultType)
+        {
+            if (Program.Rules.ContainsKey(format))
+            {
+                foreach (KeyValuePair<string, Rule> r in Program.Loops)
+                {
+                    if (r.Key == format)
+                    {
+                        return new RuleObject(r.Value.Name, r.Value.ResultType);
+                    }
+                }
+            }
+
+            string name = $"looprule_{Program.Loops.Count}";
+            Rule rule = new Rule(name, format, resultType.ToSeq(), true, RuleType.Loop);
+            return new RuleObject(rule.Name, rule.ResultType);
         }
 
         private static void ReplaceValue(ref string template, string name, string value)
